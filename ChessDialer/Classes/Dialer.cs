@@ -13,69 +13,131 @@ namespace ChessDialer.Classes
         private long _dialCount { get; set; }
 
         private HashSet<string> phoneNumbers = new HashSet<string>();
+
+        private int _gridRows { get; set; }
+        private int _gridColumns { get; set; }
+
+        private string[] _gridValues { get; set; }
+
+        public string[,] PhoneGrid { get; set; }
  
-        public Dialer()
+        public Dialer(int rows, int columns, string[] gridValues)
         {
+            _gridRows = rows;
+            _gridColumns = columns;
+            _gridValues = gridValues;
+            GeneratePhoneGrid();
+        }
+
+        private void GeneratePhoneGrid()
+        {
+            if (_gridValues.Length != _gridRows * _gridColumns)
+            {
+                throw new Exception("There is too many or not enough values for the size of the grid created");
+            }
+
+            PhoneGrid = new string[_gridRows,_gridColumns];
+
+            int currentGridValue = 0;
+
+            for (int j = 0; j < _gridRows; j++)
+            {
+                for (int k = 0; k < _gridColumns; k++)
+                {
+                    PhoneGrid[j, k] = _gridValues[currentGridValue++];
+                }
+            }
             
         }
+
 
         // only need to go as deep as phone number but could change in the future
         // starting at i == 2 as we cannot start phone numbers with 0 or 1
         // string array of omit items will allow user omit numbers of other items if the grid gets expanded.
         public long DialCounts(int _keyedInputCount , ChessPiece piece, string[] omitItems)
         {
-            return GenerateCount(_keyedInputCount, piece.MovementMatrix);
+            return GenerateCount(_keyedInputCount,piece.PlayGrid, piece.MovementMatrix, omitItems);
         }        
 
         //_keyedInputCount equals how many digits we are needing to dive down too.
-        private long GenerateCount(int _keyedInputCount, Dictionary<int,int[]> map)
+        private long GenerateCount(int _keyedInputCount,string[,] phoneGrid, Dictionary<string,HashSet<string>> map, string[] omitItems)
         {
-            long[,] matrix = new long[map.Count, map.Count];
+            long[,] matrix = new long[_keyedInputCount, phoneGrid.Length];
+            //we flatten the 2D array so that we can correlate it to the postion on the matrix
+            //have thought about refactoring the movement map so that we do not have to flatten the array, but wanting to get out some code for review
+            string[] flattendphoneGrid = Flatten2DArray(phoneGrid);
 
-            //fill matrix 
-            for (int i = 0; i < map.Count; i++)
+            long count = 0;
+            for (int i = 0; i < matrix.GetLength(1); i++)
             {
-                matrix[1, i] = 1;
+                count = (count = GenerateNumber(_keyedInputCount - 1, flattendphoneGrid[i], map, matrix, omitItems, flattendphoneGrid));
             }
+            
 
+            //fill matrix
             //start at j==2 as problem indicates cannot start with 0 or 1 so we only want to return the result for numbers starting
             //from 2-9
-            for (int j = 2; j < _keyedInputCount + 1; j++)
-            {
-                for (int x = 0; x < map.Count; x++)
-                {
-                    foreach (var item in map[x])
-                    {
-                        matrix[j,x] += matrix[j - 1,item];
-                    }
-                }
-                
-            }
+          
+
 
             long result = 0;
             
-            for (int z = 0; z < map.Count; z++)
+            for (int x = 0; x < matrix.GetLength(0); x++)
             {
-                result += matrix[_keyedInputCount,z];
+                for (int y = 2; y < matrix.GetLength(1); y++)
+                {
+                    result += matrix[x, y];
+                }
             }
+            return result;
+        }
+
+
+        static string[] Flatten2DArray(string[,] input)
+        {
+            
+            int size = input.Length;
+            string[] result = new string[size];
+
+            int write = 0;
+            for (int i = 0; i <= input.GetUpperBound(0); i++)
+            {
+                for (int z = 0; z <= input.GetUpperBound(1); z++)
+                {
+                    result[write++] = input[i, z];
+                }
+            }
+            
             return result;
         }
 
         #region non-functioning recursive method
         //recurseive method to generate a 7 digit number where n == depth of recursion. This method is not working at this time.
-        //private long GenerateNumber(int start, int pos, int n, Dictionary<int,int[]> map, string[] omitItems)
-        //{
-        //    if (pos == n)
-        //    {
-        //        return 1;
-        //    }            
+        private long GenerateNumber(int n, string startValue, Dictionary<string, HashSet<string>> map, long[,] matrix, string[] omitItems, string[] flattenedPhoneGrid)
+        {
+            if (n == 0)
+            {
+                return 1;
+            }
+            int position = Array.FindIndex(flattenedPhoneGrid, w => w == startValue);
+            if (matrix[n, position] != 0 || !map.ContainsKey(startValue))
+            {
+                return matrix[n, position];
+            }
 
-        //    foreach(var path in map[start])
-        //    {
-        //        _dialCount = (_dialCount + GenerateNumber(path, pos + 1, n, map, omitItems));               
-        //    }
-        //    return map[start][pos];
-        //}
+            long count = 0;
+
+            foreach (var path in map[startValue])
+            {
+                if (omitItems.Contains(path))
+                {
+                    continue;
+                }
+                count = (count + GenerateNumber(n - 1, path, map,matrix, omitItems, flattenedPhoneGrid));
+            }
+            matrix[n, position] = count;
+            return count;
+        }
         #endregion
 
     }

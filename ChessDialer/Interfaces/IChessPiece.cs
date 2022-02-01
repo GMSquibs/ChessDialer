@@ -9,7 +9,7 @@ namespace ChessDialer
 {
     interface IChessPiece
     {
-        Dictionary<int, int[]> MovementMatrix { get;}
+        Dictionary<string, HashSet<string>> MovementMatrix { get;}
         //int Nodes { get; set; } //how many nodes we need to run this process against
         
         PieceType PieceType { get; set; }//this will help with processing later

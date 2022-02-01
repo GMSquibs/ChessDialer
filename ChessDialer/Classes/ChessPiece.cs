@@ -8,115 +8,158 @@ namespace ChessDialer.Classes
 {
     public class ChessPiece: IChessPiece
     {
-        public Dictionary<int, int[]> MovementMatrix { get; set; }
+        public Dictionary<string, HashSet<string>> MovementMatrix { get; set; }
         public PieceType PieceType { get; set; }
+        public string[,] PlayGrid { get; set; }
+        
 
-        public ChessPiece(PieceType pType)
+        public ChessPiece(PieceType pType, string[,] playGrid)
         {
             PieceType = pType;
-            GenerateMovementMatrix(PieceType);
+            PlayGrid = playGrid;
+            GenerateMovementMatrix(PieceType, PlayGrid);
         }
 
-        private void GenerateMovementMatrix(PieceType pieceType)
+        private void GenerateMovementMatrix(PieceType pieceType, string[,] playGrid)
         {
-            //did not include * and # in the move matrix as these were considered invalid movements.
             //generate movement matrix based on the piece.
-            //Dictionary key is the "pressed" or "dialed" number, value is array of possible next moves
+            //this will programatically generate all possible moves regardless of the size of the grid passed in
+
+            int maxMovementRange = playGrid.GetLength(0) > playGrid.GetLength(1) ? playGrid.GetLength(0) : playGrid.GetLength(1);
+            
             switch (pieceType)
             {
+                //move maps are made up of x, y cordinates for movements from a singular position
+                //for complex movements this would need to be looked at and modified to allow an array beoynd 2 indexes
                 case PieceType.Rook:
-                    MovementMatrix = new Dictionary<int, int[]>()
-                    {
-                        {0, new int[] {2,5,8} },
-                        {1, new int[] {2,3,4,7} },
-                        {2, new int[] {1,3,5,8,0} },
-                        {3, new int[] {1,2,6,9} },
-                        {4, new int[] {1,5,6,7} },
-                        {5, new int[] {2,4,6,8,0} },
-                        {6, new int[] {3,4,5,9} },
-                        {7, new int[] {1,4,8,9} },
-                        {8, new int[] {2,5,7,9} },
-                        {9, new int[] {3,6,7,8} }
-                    };
+                    int[][] moveMap = new int[][]
+                        {
+                            new int[] {0,1},
+                            new int[] {1,0},
+                            new int[] {0,-1},
+                            new int[] {-1,0}
+                        };
+                    GetPieceMoves(playGrid, moveMap, maxMovementRange);
                     break;
                 case PieceType.Knight:
-                    MovementMatrix = new Dictionary<int, int[]>()
-                    {
-                        {0, new int[] {4,6} },
-                        {1, new int[] {6,8} },
-                        {2, new int[] {7,9} },
-                        {3, new int[] {4,8} },
-                        {4, new int[] {0,3,9} },
-                        {5, new int[] {} },
-                        {6, new int[] {0,1,7} },
-                        {7, new int[] {2,6} },
-                        {8, new int[] {1,3} },
-                        {9, new int[] {2,4} }
-                    };
+                    moveMap = new int[][]
+                        {
+                            new int[] {2,1},
+                            new int[] {1,2},
+                            new int[] {-1,2},
+                            new int[] {-2,1},
+                            new int[] {-2,-1},
+                            new int[] {-1,-2},
+                            new int[] {1,-2},
+                            new int[] {2,-1}
+                        };
+                    GetPieceMoves(playGrid, moveMap,1);
                     break;
                 case PieceType.Pawn:
-                    MovementMatrix = new Dictionary<int, int[]>()
-                    {
-                        {0, new int[] {8} },
-                        {1, new int[] {} },
-                        {2, new int[] {} },
-                        {3, new int[] {} },
-                        {4, new int[] {1} },
-                        {5, new int[] {2} },
-                        {6, new int[] {3} },
-                        {7, new int[] {4} },
-                        {8, new int[] {5} },
-                        {9, new int[] {6} }
-                    };
+                    moveMap = new int[][]
+                        {
+                            new int[] {1,0}
+                        };
+                    GetPieceMoves(playGrid, moveMap,1);
                     break;
                 case PieceType.Bishop:
-                    MovementMatrix = new Dictionary<int, int[]>()
-                    {
-                        {0, new int[] {7,9} },
-                        {1, new int[] {5,9} },
-                        {2, new int[] {4,6} },
-                        {3, new int[] {5,7} },
-                        {4, new int[] {2,8} },
-                        {5, new int[] {1,3,7,9} },
-                        {6, new int[] {2,8} },
-                        {7, new int[] {3,5,0} },
-                        {8, new int[] {4,6} },
-                        {9, new int[] {1,5,0} }
-                    };
+                     moveMap = new int[][]
+                         {
+                            new int[] {1,1},
+                            new int[] {-1,1},
+                            new int[] {-1,-1},
+                            new int[] {1,-1}
+                         };
+                    GetPieceMoves(playGrid, moveMap,maxMovementRange);
                     break;
                 case PieceType.Queen:
-                    MovementMatrix = new Dictionary<int, int[]>()
-                    {
-                        {0, new int[] {2,5,7,8,9} },
-                        {1, new int[] {2,3,4,5,7} },
-                        {2, new int[] {1,3,4,5,6,8,0} },
-                        {3, new int[] {1,2,5,6,7,9} },
-                        {4, new int[] {1,2,5,6,7,8} },
-                        {5, new int[] {1,2,3,4,6,7,8,9,0} },
-                        {6, new int[] {3,4,5,8,9} },
-                        {7, new int[] {1,3,4,5,8,9,0} },
-                        {8, new int[] {2,4,5,6,7,9,0} },
-                        {9, new int[] {1,3,5,6,7,8,0} }
-                    };
+                     moveMap = new int[][]
+                         {
+                            new int[] {0,1},
+                            new int[] {1,0},
+                            new int[] {0,-1},
+                            new int[] {-1,0},
+                            new int[] {1,1},
+                            new int[] {-1,1},
+                            new int[] {-1,-1},
+                            new int[] {1,-1}
+                         };
+                    GetPieceMoves(playGrid, moveMap,maxMovementRange);
                     break;
                 case PieceType.King:
-                    MovementMatrix = new Dictionary<int, int[]>()
-                    {
-                        {0, new int[] {7,8,9} },
-                        {1, new int[] {2,4,5} },
-                        {2, new int[] {1,3,4,5,6} },
-                        {3, new int[] {2,5,6} },
-                        {4, new int[] {1,2,5,7,8} },
-                        {5, new int[] {1,2,3,4,6,7,8,9} },
-                        {6, new int[] {2,3,5,8,9} },
-                        {7, new int[] {4,5,8,0} },
-                        {8, new int[] {4,5,6,7,9,0} },
-                        {9, new int[] {5,6,8,0} }
-                    };
+                    moveMap = new int[][]
+                         {
+                            new int[] {0,1},
+                            new int[] {1,0},
+                            new int[] {0,-1},
+                            new int[] {-1,0}
+                         };
+                    GetPieceMoves(playGrid, moveMap, 1);
                     break;
                 default:
                     throw new NotImplementedException("Unknown Piece Type. Implment functionality for new piece by adding new type to PieceType.cs and developing the MovementMatrix");
             }
+
         }
+
+        //steps indicate how many times the piece can perform the x,y corodinate movement
+        internal void GetPieceMoves(string[,] playGrid, IEnumerable<int[]> movements, int maxMovementSteps)
+        {
+            int maxRows = playGrid.GetLength(0);
+            int maxColumns = playGrid.GetLength(1);
+
+            //Dictionary key is the "pressed" or "dialed" number, value is HashSet of possible next moves. Changed to hashset to accomodate larger grids
+            //and modify to strings to allow for alphanumeric characters
+            MovementMatrix = new Dictionary<string, HashSet<string>>();
+
+            for (int x = 0; x < maxRows; x++)
+            {
+                for (int y = 0; y < maxColumns; y++)
+                {
+                    foreach (var move in movements)
+                    {
+                        //here, a positive x indicates an upwards movement. if x ==0, and the movement map indicate a move to spaces up,
+                        //we obviously cannot do that as it would be outside the bounds of the map. A negative x, indicates downwards movement
+                        //so we need to subtract from the current to give us a positive movement result (0 - (-2) = 2) which will increase to x coordinate appropriately
+                        
+                        var nextX = x - move[0];
+                        var nextY = y - move[1];
+                        int steps = 1;
+                        while(IsValidMove(playGrid, nextX, nextY, maxRows, maxColumns, out string newLocationValue) && steps <= maxMovementSteps)
+                        {
+                            if (MovementMatrix.ContainsKey(playGrid[x, y]))
+                            {
+                                MovementMatrix[playGrid[x, y]].Add(newLocationValue);
+                            }
+                            else
+                            {
+                                MovementMatrix.Add(playGrid[x, y], new HashSet<string>() { newLocationValue });
+                            }
+                            //for pieces with more then one step in the movement, reperform movement map until it hits a boundary
+                            
+                            steps++;
+                            nextX = nextX - move[0];
+                            nextY = nextY - move[1];
+                            
+                        }    
+                    }
+                }
+            }
+            
+        }
+        private bool IsValidMove(string[,] board, int nextRow, int nextColumn, int maxRows, int maxColumns, out string locationValue)
+        {
+            
+            locationValue = null;
+            //var newRow = currentX - nextX;
+            if ((nextRow < 0) || (nextRow >= maxRows)) return false;
+
+            //var newCol = currentY - nextY;
+            if ((nextColumn < 0) || (nextColumn >= maxColumns)) return false;
+
+            locationValue = board[nextRow, nextColumn];
+            return true;
+        }
+
     }
 }

@@ -13,24 +13,33 @@ namespace ChessDialer
         static void Main(string[] args)
         {
             //create pieces for testing
-            ChessPiece[] pieces = new ChessPiece[]
-            {
-                new ChessPiece(PieceType.Knight),
-                new ChessPiece(PieceType.Rook),
-                new ChessPiece(PieceType.Pawn),
-                new ChessPiece(PieceType.Queen),
-                new ChessPiece(PieceType.King),
-                new ChessPiece(PieceType.Bishop)
-            };
+            
+
+            int gridRows = 4;
+            int gridColumns = 3;
+            string[] gridValues = new string[] { "1", "2", "3",
+                                                 "4", "5", "6",
+                                                 "7", "8", "9",
+                                                 "*", "0", "#"};
             
 
             int keyLength = 7; //looking for 7 numbers deep
 
-            Dialer dialer = new Dialer();
-
+            //create dialer first to create the phone grid
+            Dialer dialer = new Dialer(gridRows, gridColumns, gridValues);
+            
             Dictionary<PieceType, long> counts = new Dictionary<PieceType, long>();
-            string[] keysToOmit = new string[0];
+            string[] keysToOmit = new string[] { "*", "#" };
 
+            ChessPiece[] pieces = new ChessPiece[]
+            {
+                new ChessPiece(PieceType.Knight, dialer.PhoneGrid),
+                new ChessPiece(PieceType.Rook, dialer.PhoneGrid),
+                new ChessPiece(PieceType.Pawn, dialer.PhoneGrid),
+                new ChessPiece(PieceType.Queen, dialer.PhoneGrid),
+                new ChessPiece(PieceType.King, dialer.PhoneGrid),
+                new ChessPiece(PieceType.Bishop, dialer.PhoneGrid)
+            };
             foreach (ChessPiece piece in pieces)
             {
                 if (!counts.ContainsKey(piece.PieceType))
