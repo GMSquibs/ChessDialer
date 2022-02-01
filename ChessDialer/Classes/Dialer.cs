@@ -68,23 +68,20 @@ namespace ChessDialer.Classes
             string[] flattendphoneGrid = Flatten2DArray(phoneGrid);
 
             long count = 0;
-            for (int i = 0; i < matrix.GetLength(1); i++)
+            for (int i = 2; i < matrix.GetLength(1); i++)
             {
+                if (omitItems.Contains(flattendphoneGrid[i]))
+                {
+                    continue;
+                }
                 count = (count = GenerateNumber(_keyedInputCount - 1, flattendphoneGrid[i], map, matrix, omitItems, flattendphoneGrid));
             }
-            
-
-            //fill matrix
-            //start at j==2 as problem indicates cannot start with 0 or 1 so we only want to return the result for numbers starting
-            //from 2-9
           
-
-
             long result = 0;
             
             for (int x = 0; x < matrix.GetLength(0); x++)
             {
-                for (int y = 2; y < matrix.GetLength(1); y++)
+                for (int y = 0; y < matrix.GetLength(1); y++)
                 {
                     result += matrix[x, y];
                 }

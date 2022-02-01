@@ -20,7 +20,8 @@ namespace ChessDialer
             string[] gridValues = new string[] { "1", "2", "3",
                                                  "4", "5", "6",
                                                  "7", "8", "9",
-                                                 "*", "0", "#"};
+                                                 "*", "0", "#",
+                                                };
             
 
             int keyLength = 7; //looking for 7 numbers deep
